@@ -8,15 +8,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Debris = game:GetService("Debris")
 local localPlayer = Players.LocalPlayer
 
--- حماية وتحديد المكان الأنسب للواجهة في الجوال (لتجنب الحظر أو الإخفاء)
+-- حماية وتحديد المكان الأنسب للواجهة في الجوال
 local successGui, guiParent = pcall(function()
     return gethui and gethui() or CoreGui
 end)
 if not successGui or not guiParent then
     guiParent = localPlayer:WaitForChild("PlayerGui")
 end
-
-local lastMsgTime = 0
 
 -- جدول ألوان مميزة لأسماء اللاعبين
 local userColors = {"#00FF88", "#FF5555", "#FFFF55", "#FF55FF", "#55FFFF", "#FFAA00", "#FF8800"}
@@ -34,7 +32,7 @@ ScreenGui.Name = "SDFG_GlobalChat_V11"
 ScreenGui.Parent = guiParent
 ScreenGui.ResetOnSpawn = false
 
--- ==================== الزر العائم (مع نظام التنبيهات) ====================
+-- الزر العائم
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Size = UDim2.new(0, 45, 0, 45)
 ToggleButton.Position = UDim2.new(0.015, 0, 0.35, 0)
@@ -50,7 +48,7 @@ Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
 
 -- إطار الشات الرئيسي
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 380, 0, 260) -- تصغير حجمه قليلاً ليتناسب مع شاشات الجوال
+MainFrame.Size = UDim2.new(0, 380, 0, 260)
 MainFrame.Position = UDim2.new(0.08, 0, 0.35, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
@@ -147,11 +145,40 @@ ClearBtn.MouseButton1Click:Connect(clearChat)
 
 -- دالة إضافة رسالة للواجهة
 local function addMessageToUI(sender, message, isMe)
-    local timeStr = os.date("%H:%M") 
-    local nameColor = isMe and "#00A2FF" or getUserColor(sender)
-    
-    if not MainFrame.Visible and not isMe then
-        ToggleButton.TextColor3 = Color3.fromRGB(255, 50, 50)
+    local msgLabel = Instance.new("TextLabel")
+    msgLabel.Size = UDim2.new(1, 0, 0, 25)
+    msgLabel.BackgroundTransparency = 1
+    msgLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    msgLabel.TextSize = 13
+    msgLabel.Font = Enum.Font.Gotham
+    msgLabel.TextXAlignment = Enum.TextXAlignment.Left
+    msgLabel.Text = "[" .. sender .. "]: " .. message
+    msgLabel.Parent = ScrollingFrame
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
+end
+
+-- ربط إرسال الرسائل
+SendButton.MouseButton1Click:Connect(function()
+    if TextBox.Text ~= "" then
+        local msg = TextBox.Text
+        TextBox.Text = ""
+        
         pcall(function()
-            local sound = Instance.new("Sound")
-            sound
+            if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                local channels = TextChatService:FindFirstChild("TextChannels")
+                if channels then
+                    local general = channels:FindFirstChild("RBXGeneral")
+                    if general then
+                        general:SendAsync(msg)
+                    end
+                end
+            else
+                game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents"):FindFirstChild("SayMessageRequest"):FireServer(msg, "All")
+            end
+        end)
+        
+        addMessageToUI(localPlayer.Name, msg, true)
+    end
+end)
+
+print("════════ [SDFG GLOBAL CHAT LOADED SUCCESSFULLY] ════════")
