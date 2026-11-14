@@ -147,7 +147,7 @@ ClearBtn.MouseButton1Click:Connect(clearChat)
 
 -- دالة إضافة رسالة للواجهة
 local function addMessageToUI(sender, message, isMe)
-    local timeStr = os.date("%H:%M")
+    local timeStr = os.date("%H:%M") 
     local nameColor = isMe and "#00A2FF" or getUserColor(sender)
     
     if not MainFrame.Visible and not isMe then
